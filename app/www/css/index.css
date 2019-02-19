@@ -1,0 +1,263 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+@font-face {
+  font-family: 'Noto Sans Japanese';
+  font-style: normal;
+  font-weight: 100;
+  src: url('fonts/NotoSansJP-Thin.woff') format('woff');
+}
+@font-face {
+  font-family: 'Noto Sans Japanese';
+  font-style: normal;
+  font-weight: 200;
+  src: url('fonts/NotoSansJP-Light.woff') format('woff');
+}
+@font-face {
+   font-family: 'Noto Sans Japanese';
+   font-style: normal;
+   font-weight: 300;
+   src: url('fonts/NotoSansJP-DemiLight.woff') format('woff');
+}
+@font-face {
+   font-family: 'Noto Sans Japanese';
+   font-style: normal;
+   font-weight: 400;
+   src: url('fonts/NotoSansJP-Regular.woff') format('woff');
+ }
+@font-face {
+   font-family: 'Noto Sans Japanese';
+   font-style: normal;
+   font-weight: 500;
+   src: url('fonts/NotoSansJP-Medium.woff') format('woff');
+ }
+@font-face {
+   font-family: 'Noto Sans Japanese';
+   font-style: normal;
+   font-weight: 700;
+   src: url('fonts/NotoSansJP-Bold.woff') format('woff');
+ }
+@font-face {
+   font-family: 'Noto Sans Japanese';
+   font-style: normal;
+   font-weight: 900;
+   src: url('fonts/NotoSansJP-Black.woff') format('woff');
+ }
+
+* {
+    -webkit-tap-highlight-color: rgba(0,0,0,0); /* make transparent link selection, adjust last value opacity 0 to 1.0 */
+}
+
+body {
+    -webkit-touch-callout: none;src: src: /* prevent callout to copy image, etc when tap to hold */
+    -webkit-text-size-adjust: none;src:      /* prevent webkit from resizing text to fit */
+    -webkit-user-select: none;src: src:   /* prevent copy paste, to allow, change 'none' to 'text' */
+/*
+    background-color:#E4E4E4;
+    background-image:linear-gradient(top, #A7A7A7 0%, #E4E4E4 51%);
+    background-image:-webkit-linear-gradient(top, #A7A7A7 0%, #E4E4E4 51%);
+    background-image:-ms-linear-gradient(top, #A7A7A7 0%, #E4E4E4 51%);
+    background-image:-webkit-gradient(
+src: linear,
+src: left top,
+src: left bottom,
+src: color-stop(0, #A7A7A7),
+src: color-stop(0.51, #E4E4E4)
+    );
+	background-color:none;
+    background-attachment:fixed;
+*/
+	background-image:linear-gradient(#222, #222);
+/*    font-family:'HelveticaNeue-Light', 'HelveticaNeue', Helvetica, Arial, sans-serif;*/
+    font-family:'Noto Sans Japanese', sans-serif;
+    font-size:12px;
+    height:100%;
+    margin:0px;
+    padding:0px;
+/*    text-transform:uppercase;*/
+    width:100%;
+}
+
+/* Portrait layout (default) */
+.app {
+    background:url(../img/logo.png) no-repeat center top; /* 170px x 200px */
+    position:absolute;src:      /* position in the center of the screen */
+    left:50%;
+    top:50%;
+    height:50px;src: src:    /* text area height */
+    width:225px;src: src:    /* text area width */
+    text-align:center;
+    padding:180px 0px 0px 0px;     /* image height is 200px (bottom 20px are overlapped with text) */
+    margin:-115px 0px 0px -112px;  /* offset vertical: half of image height and text area height */
+src: src: src: src:    /* offset horizontal: half of text area width */
+}
+
+/* Landscape layout (with min-width) */
+@media screen and (min-aspect-ratio: 1/1) and (min-width:400px) {
+    .app {
+src: background-position:left center;
+src: padding:75px 0px 75px 170px;  /* padding-top + padding-bottom + text area = image height */
+src: margin:-90px 0px 0px -198px;  /* offset vertical: half of image height */
+src: src: src: src:       /* offset horizontal: half of image width and text area width */
+    }
+}
+
+h1 {
+    font-size:24px;
+    font-weight:normal;
+    margin:0px;
+    overflow:visible;
+    padding:0px;
+    text-align:center;
+}
+
+.event {
+    border-radius:4px;
+    -webkit-border-radius:4px;
+    color:#FFFFFF;
+    font-size:12px;
+    margin:0px 30px;
+    padding:2px 0px;
+}
+
+.event.listening {
+    background-color:#333333;
+    display:block;
+}
+
+.event.received {
+    background-color:#4B946A;
+    display:none;
+}
+
+@keyframes fade {
+    from { opacity: 1.0; }
+    50% { opacity: 0.4; }
+    to { opacity: 1.0; }
+}
+ 
+@-webkit-keyframes fade {
+    from { opacity: 1.0; }
+    50% { opacity: 0.4; }
+    to { opacity: 1.0; }
+}
+ 
+.blink {
+    animation:fade 3000ms infinite;
+    -webkit-animation:fade 3000ms infinite;
+}
+
+.in, .out {
+    -webkit-animation-timing-function: ease-in-out;
+    -webkit-animation-duration: 200ms !important;
+}
+
+h1 span {
+	font-weight:bold;
+	position:absolute;
+	text-align:center;
+	width:39%;
+	height:100%;
+}
+
+hr {
+	border-bottom:1px solid rgba(0, 0, 0, .15);
+	border-left:none;
+	border-right:none;
+	border-top:none;
+	padding-bottom:10px;
+}
+
+audio {
+	height:0;
+}
+
+.kansikuva, .kansikuva img {
+	width:100%;
+}
+
+.levyTiedot {
+	width:100%;
+}
+
+td.selite {
+	font-weight:bold;
+}
+
+td:not(.selite) {
+	text-align:right;
+}
+
+td {
+	padding-bottom:5px;
+	padding-top:5px;
+}
+
+tr {
+	border-bottom:1px solid rgba(255, 255, 255, .15);
+}
+
+table { 
+    border-collapse: collapse; 
+}
+
+audio {
+	opacity:0;
+	width:0;
+}
+
+h2 {
+	margin-top:0;
+	margin-bottom:0;
+}
+
+h3 {
+	margin-top:0px;
+	opacity:.7;
+}
+
+.ui-loader-default {
+    opacity: 1 !important;      
+}
+
+#poistaHistoria .ui-header .ui-title {
+    margin-right: 5%;
+    margin-left: 5%;
+}
+
+.suosikkinappi {
+	float: right;
+}
+
+.error {
+	color:red;
+	text-align:center;
+}
+
+#aikaValinta {
+	display:none;
+}
+
+.alkuNappi {
+	min-height:80px;
+}
+
+#omatMerkinnat textarea {
+	height:auto !important;
+}

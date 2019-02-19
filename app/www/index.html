@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="format-detection" content="telephone=no" />
+	<meta name="msapplication-tap-highlight" content="no" />
+	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+
+	<meta http-equiv="Content-Security-Policy" content="
+		default-src 'self' 'unsafe-inline' http://oman.serverin.osoite:8080 https://*.akamaized.net https://*.youtube.com http://ws.audioscrobbler.com http://musicbrainz.org https://itunes.apple.com https://audio-ssl.itunes.apple.com http://code.jquery.com https://code.jquery.com https://cdnjs.cloudflare.com https://ssl.gstatic.com gap: data: blob: filesystem: ; " />
+
+	<link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css">
+
+	<script src="js/jquery-2.1.4.js"></script>
+
+	<script type="text/javascript" src="cordova.js"></script>
+	<script src="js/jquery.mobile-1.4.5.min.js"></script>
+	<script src="js/jquery.validate.min.js"></script>
+	<script src="js/messages_fi.js"></script>
+
+	<link href="css/jtsage-datebox.min.css" rel="stylesheet" type="text/css">
+	<script src="js/jtsage-datebox.min.js" type="text/javascript"></script>
+	<script src="js/jtsage-datebox.i18n.fi.utf8.min.js" type="text/javascript"></script>
+
+
+
+	<link rel="stylesheet" type="text/css" href="css/index.css" />
+	<link rel="stylesheet" type="text/css" href="css/icon-pack-custom.css" />
+	<link rel="stylesheet" href="css/themes/pinkki.css" />
+	<link rel="stylesheet" href="css/themes/jquery.mobile.icons.min.css" />
+
+	<title>Mobiiliohjelmointi</title>
+</head>
+
+<body>
+	<div data-role="panel" data-display="overlay" data-position="left" data-theme="a" id="asetukset">
+		<h2>Asetukset</h2>
+		<form>
+			<div class="ui-field-contain">
+				<label style="width:55%;" for="varmuuskopiointi">Varmuuskopiointi</label>
+				<select style="width:50%;" id="varmuuskopiointi" name="varmuuskopiointi" data-role="slider">
+        <option value="0">Pois</option>
+        <option value="1">Päällä</option>
+    </select>
+			</div>
+		</form>
+		<button id="lahetaSuosikit" class="ui-btn ui-corner-all">Lähetä suosikit</button>
+
+		<button id="palautaSuosikit" class="ui-btn ui-corner-all">Palauta suosikit</button>
+
+		<div id="aikaValinta">
+			<input type="text" data-role="datebox" data-options='{"mode":"datetimebox", "useLang":"fi"}' />
+
+		</div>
+
+		<div id="valitseAika"></div>
+
+		<a href="#poistaHistoria" data-rel="popup" data-position-to="window" data-transition="pop" class="ui-btn ui-corner-all">Tyhjennä hakuhistoria</a>
+	</div>
+
+	<div data-role="header" data-theme="a" data-position="fixed">
+		<a href="#asetukset" class="ui-btn ui-btn-inline ui-corner-all ui-icon-bars ui-btn-icon-notext">Asetukset</a>
+		<h1><span class="vanha"></span><span class="uus"></span></h1>
+	</div>
+
+	<div data-role="footer" data-theme="a" data-position="fixed">
+		<div data-role="navbar" id="navi">
+			<ul>
+				<li><a rel="external" data-transition="fade" href="#hae" class="ui-btn ui-icon-search ui-btn-icon-top ui-mini">Hae</a></li>
+				<li><a data-transition="fade" href="#historia" class="ui-btn ui-icon-clock ui-btn-icon-top ui-mini">Hakuhistoria</a></li>
+				<li><a data-transition="fade" href="#tallennetut" class="ui-btn ui-icon-star ui-btn-icon-top ui-mini">Suosikit</a></li>
+			</ul>
+		</div>
+	</div>
+	<div data-role="popup" id="kameraVirhe" data-theme="a" data-transition="pop">
+		<p>Ei oikeuksia kameraan, skannaus ei toimi.</p>
+	</div>
+	<div data-role="popup" id="eiLoytynyt" data-theme="a" data-transition="pop">
+		<p>Levyä ei löytynyt.</p>
+	</div>
+
+	<div data-role="popup" id="eiYhteytta" data-theme="a" data-transition="pop">
+		<p>Ei saatu yhteyttä palvelimeen.</p>
+	</div>
+
+	<div data-role="popup" id="eiVerkkoyhteytta" data-theme="a" data-transition="pop">
+		<p>Sovellus tarvitsee verkkoyhteyden.</p>
+	</div>
+
+	<div data-role="popup" id="tietokantavirhe" data-theme="a" data-transition="pop">
+		<p>Tietokantavirhe.</p>
+	</div>
+
+	<div data-role="popup" id="poistaHistoria" data-transition="pop" data-theme="a" data-dismissible="false" style="max-width:320px; max-height: 140px;" data-position-to="window">
+		<div data-role="header" data-theme="b">
+			<h1>Tyhjennetäänkö hakuhistoria?</h1>
+		</div>
+		<div role="main" class="ui-content" style="margin-left:7px;">
+			<center>
+				<a href="#" id="peruuta" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b" data-rel="back">Peruuta</a>
+				<a href="#" id="tyhjenna" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b" data-transition="flow">Tyhjennä</a>
+			</center>
+		</div>
+	</div>
+
+	<div data-role="page" id="hae" data-cache="false" data-title="Hae">
+		<div role="main" class="ui-content ui-body-a">
+			<p style="text-align: center">Valitse levyn hakutapa ja hae levyä.</p>
+			<button type="button" class="alkuNappi ui-btn ui-corner-all" id="skannaa" name="skannaa">Skannaa levy</button>
+			<button type="button" class="alkuNappi ui-btn ui-corner-all" id="syotaTunnus" name="syotaTunnus">Syötä levytunnus</button>
+			<form action="#" method="post" id="levyHakuTunnuksella">
+				<label>Tunnus</label>
+				<input type="text" id="tunnus" name="tunnus" placeholder="ABCD-1234" required>
+
+				<button type="button" class="ui-btn ui-corner-all" id="haeLevy" name="haeLevy">Hae</button>
+				<hr>
+			</form>
+			<button type="button" class="alkuNappi isoNappi ui-btn ui-corner-all" id="syotaNimi" name="syotaNimi">Syötä levyn nimi</button>
+			<form action="#" method="post" id="levyHakuNimella">
+				<label for="otsikko">Otsikko</label>
+				<input type="text" id="otsikko" name="otsikko" required>
+
+				<label for="artisti">Artisti</label>
+				<input type="text" id="artisti" name="artisti" required>
+
+				<button type="button" class="ui-btn ui-corner-all" id="haeLevy" name="haeLevy">Hae</button>
+				<hr>
+			</form>
+		</div>
+
+
+	</div>
+
+
+	<div data-role="page" id="hakutulos" data-title="Hakutulos" data-cache="false">
+
+		<div role="main" class="ui-content ui-body-a">
+			<div class="suosikkinappi"><button id="lisaaSuosikki" style="transform:scale(1.5);" class="ui-nodisc-icon ui-btn ui-btn-inline ui-corner-all ui-icon-star ui-btn-icon-notext">Lisää suosikkeihin</button>
+			</div>
+
+			<div class="levytiedot"></div>
+			<br><br>
+			<form action="#" method="post" id="omatMerkinnat">
+				<label>Omat merkinnät</label>
+				<textarea rows="14" type="text" id="merkinnat" name="merkinnat" placeholder="Omia merkintöjä"></textarea>
+			</form>
+			<center>
+				<button type="button" class="ui-btn ui-btn-inline ui-corner-all" id="tallennaMerkinta" style="width:46%;" name="tallennaMerkinta">Tallenna</button>
+				<button type="button" class="ui-btn ui-btn-inline ui-corner-all" id="tyhjennaMerkinta" style="width:46%;" data-inline="true" name="tyhjennaMerkinta">Tyhjennä</button>
+			</center>
+
+		</div>
+
+
+	</div>
+
+	<div data-role="page" id="suosikkienPalautus" data-title="Suosikit" data-cache="false">
+
+
+
+
+	</div>
+
+
+
+	<div data-role="page" id="historia" data-title="Hakuhistoria">
+
+		<div role="main" class="ui-content ui-body-a">
+			<ul data-role="listview" id="hakuhistoria">
+			</ul>
+		</div>
+
+
+	</div>
+
+
+	<div data-role="page" id="tallennetut" data-title="Suosikit">
+
+		<div role="main" class="ui-content ui-body-a">
+
+			<form class="ui-filterable">
+				<input data-filter-theme="a" placeholder="Hae suosikeista" id="filtteri" data-type="search" class="ui-input-text">
+			</form>
+			<br>
+			<ul data-role="listview" data-filter="true" data-input="#filtteri" id="tallennetutLevyt">
+			</ul>
+		</div>
+
+
+	</div>
+
+
+
+	<script type="text/javascript">
+		document.addEventListener("deviceready", onDeviceReady, false);
+		var db = null;
+
+		function sqlVirhe(virhe) {
+			$("#tietokantavirhe").popup("open");
+		}
+
+		function sqlOnnistui() {
+
+		}
+
+		function onDeviceReady() {
+
+			var permissions = cordova.plugins.permissions;
+
+			function error() {
+				$("#kameraVirhe").popup("open");
+			}
+
+			function success(status) {
+
+				if (!status.hasPermission) error();
+			}
+
+			permissions.requestPermission(permissions.CAMERA, success, error);
+
+
+
+			db = window.openDatabase("levykanta", "1.0", "levykanta", 1000000);
+			db.transaction(suoritaSql, sqlVirhe, sqlOnnistui);
+
+			function suoritaSql(tx) {
+				tx.executeSql('CREATE TABLE IF NOT EXISTS HaetutLevyt (aika INT,otsikko TEXT,artisti TEXT, PRIMARY KEY (otsikko, artisti));');
+				tx.executeSql('CREATE TABLE IF NOT EXISTS Suosikkilevyt (otsikko TEXT,artisti TEXT,merkinta TEXT, PRIMARY KEY (otsikko, artisti));');
+				tx.executeSql('CREATE TABLE IF NOT EXISTS Asetukset (nimi TEXT,paalla INT, PRIMARY KEY (nimi));');
+				tx.executeSql("INSERT OR IGNORE INTO Asetukset VALUES (?,?);", ["varmuuskopiointi", 0]);
+
+
+			}
+
+
+
+
+
+		}
+
+		$(document).bind("mobileinit", function() {
+			$.mobile.pushStateEnabled = false;
+		});
+		
+		$("#hakuhistoria a").click(function(event) {
+  			event.preventDefault();
+		});
+		
+		$("#tallennetutLevyt a").click(function(event) {
+  			event.preventDefault();
+		});
+		
+		$(document).one("pagebeforecreate", function() {
+			$("[data-role='header']").toolbar().enhanceWithin();
+			$("[data-role='footer']").toolbar().enhanceWithin();
+			$("#poistaHistoria").popup().enhanceWithin();
+			$("#eiLoytynyt").popup().enhanceWithin();
+			$("#kameraVirhe").popup().enhanceWithin();
+			$("#eiYhteytta").popup().enhanceWithin();
+			$("#eiVerkkoyhteytta").popup().enhanceWithin();
+			$("#tietokantavirhe").popup().enhanceWithin();
+			$("#asetukset").panel().enhanceWithin();
+		})
+
+
+		$("#palautaSuosikit").on("tap", function() {
+			$('#aikaValinta input').datebox('open');
+		});
+
+		$("#lahetaSuosikit").on("tap", function() {
+			lahetaSuosikit();
+		});
+
+		$('body').on('swiperight', function() {
+			$('#asetukset').panel('open', '');
+		});
+
+
+
+
+		function palautaSuosikit(aikaleima) {
+			$.ajax({
+					url: "http://oman.serverin.osoite:8080/suosikit/" + aikaleima,
+					dataType: "json",
+					method: "get",
+					cache: false,
+				})
+				.done(function(data) {
+					$.each(data, function(index, suosikki) {
+						palautaSuosikki(suosikki.otsikko, suosikki.artisti, suosikki.merkinta);
+					})
+					$('#tallennetutLevyt').listview('refresh');
+					$.mobile.pageContainer.pagecontainer("change", "#suosikkienPalautus");
+					$.mobile.pageContainer.pagecontainer("change", "#tallennetut");
+
+				})
+				.fail(function() {
+					$("#eiYhteytta").popup("open");
+
+				})
+		}
+
+		function lahetaSuosikit() {
+			var aikaleima = Math.floor(Date.now() / 1000);
+			db.transaction(function(tx) {
+
+				tx.executeSql("SELECT otsikko, artisti, merkinta FROM Suosikkilevyt", [], function(tx1, result) {
+					var array = [];
+
+					var len = result.rows.length;
+					for (var i = 0; i < len; i++) {
+
+						array.push({
+							otsikko: result.rows.item(i).otsikko,
+							artisti: result.rows.item(i).artisti,
+							merkinta: result.rows.item(i).merkinta,
+							aikaleima: aikaleima
+						});
+
+						if (i == len - 1) {
+
+							$.ajax({
+									url: "http://oman.serverin.osoite:8080/suosikit/lisaa",
+									dataType: "json",
+									method: "post",
+									contentType: "application/json",
+									data: JSON.stringify(array),
+								})
+								.done(function(data) {
+									console.log(data);
+								})
+								.fail(function() {
+
+									$("#eiYhteytta").popup("open");
+									$("#varmuuskopiointi").val(0).change();
+
+									db.transaction(suoritaSql, sqlVirhe, sqlOnnistui);
+
+									function suoritaSql(tx) {
+
+
+										tx.executeSql("UPDATE Asetukset SET paalla = 0 WHERE nimi = 'varmuuskopiointi';");
+
+
+									}
+
+									function sqlVirhe(virhe) {
+										$("#tietokantavirhe").popup("open");
+									}
+
+									function sqlOnnistui() {
+
+									}
+
+								})
+						}
+
+					}
+
+
+
+				}, sqlVirhe);
+			}, sqlVirhe, sqlOnnistui);
+
+
+
+
+
+		}
+
+
+
+
+		function toggleVarmuuskopiointi() {
+			var paalla;
+			if ($("#varmuuskopiointi").val() == 0) {
+				paalla = 0;
+			} else {
+				paalla = 1;
+			}
+
+			db.transaction(suoritaSql, sqlVirhe, sqlOnnistui);
+
+			function suoritaSql(tx) {
+
+
+				tx.executeSql("UPDATE Asetukset SET paalla = " + paalla + " WHERE nimi = 'varmuuskopiointi';");
+
+
+			}
+
+			function sqlVirhe(virhe) {
+				$("#tietokantavirhe").popup("open");
+			}
+
+			function sqlOnnistui() {
+
+			}
+
+		}
+
+		function varmuuskopiointi() {
+			db.transaction(function(tx) {
+
+				tx.executeSql("SELECT nimi, paalla FROM Asetukset WHERE nimi = 'varmuuskopiointi';", [], function(tx1, result) {
+
+					if (result.rows.item(0).paalla == 1) {
+						lahetaSuosikit();
+					}
+
+
+
+
+				}, sqlVirhe);
+			}, sqlVirhe, sqlOnnistui);
+		}
+
+		function unixAika(aika) {
+			return Math.floor(aika.getTime() / 1000);
+		}
+
+		$('#aikaValinta input').bind('datebox', function(e, p) {
+			if (p.method === 'set') {
+				e.stopImmediatePropagation()
+				palautaSuosikit(unixAika($(this).datebox('getTheDate')));
+			}
+		});
+
+		$(document).on("pagecontainershow", function() {
+			$(".ui-content").height(getRealContentHeight());
+		})
+		$(window).on("resize orientationchange", function() {
+			$(".ui-content").height(getRealContentHeight());
+		})
+
+		function getRealContentHeight() {
+			var activePage = $.mobile.pageContainer.pagecontainer("getActivePage"),
+				screen = $.mobile.getScreenHeight(),
+				header = $(".ui-header").hasClass("ui-header-fixed") ? $(".ui-header").outerHeight() - 1 : $(".ui-header").outerHeight(),
+				footer = $(".ui-footer").hasClass("ui-footer-fixed") ? $(".ui-footer").outerHeight() - 1 : $(".ui-footer").outerHeight(),
+				contentMargins = $(".ui-content", activePage).outerHeight() - $(".ui-content", activePage).height();
+
+			var contentHeight = screen - header - footer - contentMargins;
+
+			return contentHeight;
+		}
+
+		$(document).on("pagecontainerchange", function() {
+			navi();
+		})
+
+
+
+		function navi() {
+			var current = $(".ui-page-active").jqmData("title");
+
+			// superhieno crossfade:
+			$("[data-role='header'] h1 span.vanha").show();
+			$("[data-role='header'] h1 span.uus").hide();
+
+			$("[data-role='header'] h1 span.uus").fadeOut(200, function() {
+				$(this).text(current);
+				$("[data-role='header'] h1 span.vanha").fadeOut(200, function() {
+					$(this).text(current);
+				});
+				$(this).fadeIn(100);
+			});
+
+			$("[data-role='navbar'] a.ui-btn-active").removeClass("ui-btn-active");
+			$("[data-role='navbar'] a").each(function() {
+				if ($(this).text() === current) {
+					$(this).addClass("ui-btn-active");
+				}
+			})
+		}
+
+		function hakuHistoria() {
+
+			db.transaction(function(tx) {
+
+				tx.executeSql("SELECT otsikko, artisti FROM HaetutLevyt ORDER BY aika DESC", [], function(tx1, result) {
+					var len = result.rows.length;
+					$('#hakuhistoria').empty();
+					for (var i = 0; i < len; i++) {
+
+						$('#hakuhistoria').append('<li name="' + result.rows.item(i).otsikko + '"><a name="' + result.rows.item(i).artisti + '" href="#">' + result.rows.item(i).otsikko + ' - ' + result.rows.item(i).artisti + '</a></li>');
+
+
+					}
+
+					$('#hakuhistoria').listview('refresh');
+
+				}, sqlVirhe);
+			}, sqlVirhe, sqlOnnistui);
+
+		}
+
+		function tyhjennaHistoria() {
+			db.transaction(suoritaSql, sqlVirhe, sqlOnnistui);
+
+			function suoritaSql(tx) {
+
+
+				tx.executeSql("DELETE FROM HaetutLevyt;");
+
+			}
+
+			function sqlVirhe(virhe) {
+				$("#tietokantavirhe").popup("open");
+			}
+
+			function sqlOnnistui() {
+				$.mobile.pageContainer.pagecontainer("change", "#historia");
+			}
+		}
+
+		$("#poistaHistoria").on("tap", "#tyhjenna", function() {
+			tyhjennaHistoria();
+			$('#hakuhistoria').empty().listview('refresh');
+		});
+
+		function tallennetutLevyt() {
+
+			db.transaction(function(tx) {
+
+				tx.executeSql("SELECT otsikko, artisti FROM Suosikkilevyt", [], function(tx1, result) {
+					var len = result.rows.length;
+					$('#tallennetutLevyt').empty();
+					for (var i = 0; i < len; i++) {
+
+						$('#tallennetutLevyt').append('<li name="' + result.rows.item(i).otsikko + '"><a name="' + result.rows.item(i).artisti + '" href="#">' + result.rows.item(i).otsikko + ' - ' + result.rows.item(i).artisti + '</a></li>');
+
+
+					}
+
+					$('#tallennetutLevyt').listview('refresh');
+
+				}, sqlVirhe);
+			}, sqlVirhe, sqlOnnistui);
+
+		}
+
+
+		function haeNayte(kappale, levy, artisti, callback) {
+			var regex = /[\u3000-\u303F]|[\u3040-\u309F]|[\u30A0-\u30FF]|[\uFF00-\uFFEF]|[\u4E00-\u9FAF]|[\u2605-\u2606]|[\u2190-\u2195]|\u203B/g;
+			kappale = kappale.replace("(demo)|、", "");
+			if (regex.test(kappale + levy + artisti)) {
+				var itunesAPI = "https://itunes.apple.com/search?term=" + encodeURIComponent(levy + " " + artisti + " " + kappale) + "&entity=song&country=jp";
+			} else {
+				var itunesAPI = "https://itunes.apple.com/search?term=" + encodeURIComponent(levy + " " + artisti + " " + kappale) + "&entity=song";
+			}
+
+			$.ajax({
+					url: itunesAPI,
+					dataType: "json",
+					timeout: 10000
+				})
+				.done(function(data) {
+					if (data.resultCount != 0) {
+						callback(data.results[0].previewUrl);
+					} else {
+						callback(false);
+					}
+				})
+				.fail(function() {
+					callback(false);
+				})
+		}
+
+		function artistiNimi(json) {
+			return json['artist-credit'][0]['name'];
+		}
+
+		function otsikkoNimi(json) {
+			return json['title'];
+		}
+
+		function julkaisuPvm(json) {
+			var pvm = json['release-events'][0]['date'];
+			if (pvm == "") {
+				return "Ei tiedossa";
+			} else {
+				return pvm;
+			}
+		}
+
+		function julkaisuMaa(json) {
+			var maa = json['release-events'][0]['area']['name'];
+			if (maa == null) {
+				return "Ei tiedossa";
+			} else {
+				return maa;
+			}
+		}
+
+		function levyTunnus(json) {
+			if (json['label-info'].length !== 0) {
+				var tunnus = json['label-info'][0]['catalog-number'];
+			} else {
+				var tunnus = null;
+			}
+			if (tunnus == null) {
+				return "Ei tiedossa";
+			} else {
+				return tunnus;
+			}
+		}
+
+		function levyYhtio(json) {
+			if (json['label-info'].length !== 0) {
+				var yhtio = json['label-info'][0]['label']['name'];
+			} else {
+				var yhtio = null;
+			}
+			if (yhtio == null) {
+				return "Ei tiedossa";
+			} else {
+				return yhtio;
+			}
+		}
+
+		function tiedotSivulle(json, kappalelista, callback) {
+			var artisti = artistiNimi(json);
+			var otsikko = otsikkoNimi(json);
+			var pvm = julkaisuPvm(json);
+			var maa = julkaisuMaa(json);
+			var tunnus = levyTunnus(json);
+			var yhtio = levyYhtio(json);
+
+			lataaKansikuva(otsikko, artisti, function(kansikuvaUrl) {
+
+				kappalelista = '<h2>' + otsikko + '</h2>' +
+					'<h3>' + artisti + '</h3>' +
+					'<div class="kansikuva">' +
+					'<img src="' + kansikuvaUrl + '"/>' +
+					'</div>' +
+					'<table class="levyTiedot">' +
+					'<tr><td class="selite">Julkaisupäivämäärä</td><td>' + pvm + '</td></tr>' +
+					'<tr><td class="selite">Julkaisumaa</td><td>' + maa + '</td></tr>' +
+					'<tr><td class="selite">Levytunnus</td><td class="tunnus">' + tunnus + '</td></tr>' +
+					'<tr><td class="selite">Levy-yhtiö</td><td>' + yhtio + '</td></tr>' +
+					'</table><br><br>' +
+					'<div>' +
+					'<ol class="kappalelista" data-role="listview">' + kappalelista + '</ol>'
+				'</div>';
+
+				callback(kappalelista);
+			});
+		}
+
+		function haeTiedotNimella(levy, artisti, callback) {
+			$('#lisaaSuosikki').css('background-color', '#3e3e3e');
+			var kappalelista = "";
+			var raja;
+			var i;
+			var levyId = null;
+			var musicbrainzAPI;
+			var json;
+			var timeOut = 1000; // MusicBrainz rajoittaa pyynnöt yhteen per sekunti
+			var kappalelistaVirhe = "Levyä ei löytynyt";
+			var ignore = " -カラオケ -karaoke"
+			i = 0;
+			musicbrainzAPI = "http://musicbrainz.org/ws/2/release/?query=artist:%22" + encodeURIComponent(artisti) + "%22%20AND%20release:%22" + encodeURIComponent(levy) + "%22" + encodeURIComponent(ignore) + "%20AND%20status:Official&fmt=json";
+			json = $.ajax({
+				url: musicbrainzAPI,
+				async: false,
+				timeout: 10000,
+				dataType: 'json',
+				error: function() {
+					kappalelista = kappalelistaVirhe;
+					callback(kappalelista);
+				}
+			});
+			try {
+				json = jQuery.parseJSON(json.responseText);
+
+				function compare(a, b) {
+					if (a.hasOwnProperty('date')) {
+						if (a.date.length == 7) {
+							var adate = new Date((a.date + "-01").replace(/-/g, '/'));
+						} else if (a.date.length == 4) {
+							var adate = new Date((a.date + "-01-01").replace(/-/g, '/'));
+						} else {
+							var adate = new Date((a.date).replace(/-/g, '/'));
+						}
+					} else {
+						var adate = 0
+					}
+					if (a.hasOwnProperty('date')) {
+
+						if (b.date.length == 7) {
+							var bdate = new Date((b.date + "-01").replace(/-/g, '/'));
+						} else if (b.date.length == 4) {
+							var bdate = new Date((b.date + "-01-01").replace(/-/g, '/'));
+						} else {
+							var bdate = new Date((b.date).replace(/-/g, '/'));
+						}
+					} else {
+						var bdate = 0
+					}
+
+					if (adate < bdate)
+						return -1;
+
+					if (adate > bdate)
+						return 1;
+					return 0;
+				}
+
+				json.releases.sort(compare);
+
+				JSON.stringify(json)
+
+
+				raja = json['count'];
+				if (raja == 0) {
+					kappalelista = kappalelistaVirhe;
+					callback(kappalelista);
+				}
+				levyId = json.releases[0].id;
+
+
+			} catch (e) {
+				kappalelista = kappalelistaVirhe;
+				callback(kappalelista);
+			}
+
+			if ((raja < 100 || raja < i * 100) && levyId == null) {
+				kappalelista = kappalelistaVirhe;
+				callback(kappalelista);
+			}
+
+			if (++i == raja || levyId != null) {
+				setTimeout(function() {
+					musicbrainzAPI = "http://musicbrainz.org/ws/2/release/" + levyId + "?inc=recordings+artist-credits+labels+discids+recordings&fmt=json&limit=100";
+					json = $.ajax({
+						url: musicbrainzAPI,
+						async: false,
+						timeout: 10000,
+						dataType: 'json',
+						error: function() {
+							kappalelista = kappalelistaVirhe;
+						}
+					});
+					try {
+						json = jQuery.parseJSON(json.responseText);
+						if (json.hasOwnProperty('error')) {
+							kappalelista = kappalelistaVirhe;
+						} else {
+							$.each(json['media'][0]['tracks'], function(i, v) {
+								kappalelista = kappalelista + '<li data-icon="play" class="kappale"><a href="#">' + v.recording.title + '<audio controls></audio></a></li>';
+							});
+						}
+					} catch (e) {
+						kappalelista = kappalelistaVirhe;
+					}
+
+					tiedotSivulle(json, kappalelista, callback);
+
+				}, timeOut);
+
+			}
+
+
+
+		}
+
+		function haeTiedotViivakoodilla(callback) {
+			cordova.plugins.barcodeScanner.scan(
+				function(result) {
+					var viivakoodi = result.text;
+
+					var kappalelista = "";
+					var raja;
+					var i;
+					var levyId = null;
+					var musicbrainzAPI;
+					var json;
+					var timeOut = 1000; // MusicBrainz rajoittaa pyynnöt yhteen per sekunti
+					var kappalelistaVirhe = "Levyä ei löytynyt";
+					i = 0;
+					musicbrainzAPI = "http://musicbrainz.org/ws/2/release/?query=barcode:" + viivakoodi + "&fmt=json";
+					json = $.ajax({
+						url: musicbrainzAPI,
+						async: false,
+						timeout: 10000,
+						dataType: 'json',
+						error: function() {
+							kappalelista = kappalelistaVirhe;
+							callback(kappalelista);
+						}
+					});
+					try {
+						json = jQuery.parseJSON(json.responseText);
+						raja = json['count'];
+						if (raja == 0) {
+							kappalelista = kappalelistaVirhe;
+							callback(kappalelista);
+						}
+						levyId = json.releases[0]['id'];
+
+					} catch (e) {
+						kappalelista = kappalelistaVirhe;
+						callback(kappalelista);
+					}
+
+					if ((raja < 100 || raja < i * 100) && levyId == null) {
+						kappalelista = kappalelistaVirhe;
+						callback(kappalelista);
+					}
+
+					if (levyId != null) {
+
+						setTimeout(function() {
+							musicbrainzAPI = "http://musicbrainz.org/ws/2/release/" + levyId + "?inc=recordings+artist-credits+labels+discids+recordings&fmt=json&limit=100";
+							json = $.ajax({
+								url: musicbrainzAPI,
+								async: false,
+								timeout: 10000,
+								dataType: 'json',
+								error: function() {
+									kappalelista = kappalelistaVirhe;
+								}
+							});
+							try {
+								json = jQuery.parseJSON(json.responseText);
+								if (json.hasOwnProperty('error')) {
+									kappalelista = kappalelistaVirhe;
+								} else {
+									$.each(json['media'][0]['tracks'], function(i, v) {
+										kappalelista = kappalelista + '<li data-icon="play" class="kappale"><a href="#">' + v.recording.title + '<audio controls></audio></a></li>';
+									});
+								}
+							} catch (e) {
+								kappalelista = kappalelistaVirhe;
+							}
+
+
+							tiedotSivulle(json, kappalelista, callback);
+
+						}, timeOut);
+
+					}
+
+
+				},
+				function(error) {
+					callback("Levyä ei löytynyt");
+				});
+
+		}
+
+		function haeTiedotTunnuksella(tunnus, callback) {
+			$('#lisaaSuosikki').css('background-color', '#3e3e3e');
+			var kappalelista = "";
+			var raja;
+			var i;
+			var levyId = null;
+			var musicbrainzAPI;
+			var json;
+			var timeOut = 1000; // MusicBrainz rajoittaa pyynnöt yhteen per sekunti
+			var kappalelistaVirhe = "Levyä ei löytynyt";
+			i = 0;
+			musicbrainzAPI = "http://musicbrainz.org/ws/2/release/?query=catno:" + tunnus + "&fmt=json";
+			json = $.ajax({
+				url: musicbrainzAPI,
+				async: false,
+				timeout: 10000,
+				dataType: 'json',
+				error: function() {
+					kappalelista = kappalelistaVirhe;
+					callback(kappalelista);
+				}
+			});
+			try {
+				json = jQuery.parseJSON(json.responseText);
+				raja = json['count'];
+				if (raja == 0) {
+					kappalelista = kappalelistaVirhe;
+					callback(kappalelista);
+				}
+				levyId = json.releases[0]['id'];
+
+			} catch (e) {
+				kappalelista = kappalelistaVirhe;
+				callback(kappalelista);
+			}
+
+			if ((raja < 100 || raja < i * 100) && levyId == null) {
+				kappalelista = kappalelistaVirhe;
+				callback(kappalelista);
+			}
+
+			if (levyId != null) {
+				setTimeout(function() {
+					musicbrainzAPI = "http://musicbrainz.org/ws/2/release/" + levyId + "?inc=recordings+artist-credits+labels+discids+recordings&fmt=json&limit=100";
+					json = $.ajax({
+						url: musicbrainzAPI,
+						async: false,
+						timeout: 10000,
+						dataType: 'json',
+						error: function() {
+							kappalelista = kappalelistaVirhe;
+						}
+					});
+					try {
+						json = jQuery.parseJSON(json.responseText);
+						if (json.hasOwnProperty('error')) {
+							kappalelista = kappalelistaVirhe;
+						} else {
+							$.each(json['media'][0]['tracks'], function(i, v) {
+								kappalelista = kappalelista + '<li data-icon="play" class="kappale"><a href="#">' + v.recording.title + '<audio controls></audio></a></li>';
+							});
+						}
+					} catch (e) {
+						kappalelista = kappalelistaVirhe;
+					}
+
+					tiedotSivulle(json, kappalelista, callback);
+
+				}, timeOut);
+
+			}
+
+
+		}
+
+		function lataaKansikuva(levy, artisti, callback) {
+			var lastfmAPI = "http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=LAST_FM_API_KEY&artist=" + encodeURIComponent(artisti) + "&album=" + encodeURIComponent(levy) + "&format=json";
+			var json = $.ajax({
+				url: lastfmAPI,
+				timeout: 5000,
+				dataType: 'json'
+			}).done(function(json) {
+				if (json.hasOwnProperty('error')) {
+					callback("img/eikuvaa.png");
+				} else {
+					callback(json.album.image[3]["#text"]);
+				}
+			});
+		}
+
+		function pauseKaikki() {
+			$('audio').each(function() {
+				this.pause();
+				this.currentTime = 0;
+			});
+		}
+
+		function lisaaMerkinta(otsikko, artisti, merkinta) {
+			db.transaction(suoritaSql, sqlVirhe, sqlOnnistui);
+
+			function suoritaSql(tx) {
+
+
+				tx.executeSql("INSERT OR IGNORE INTO Suosikkilevyt VALUES (?,?,?);", [otsikko, artisti, merkinta]);
+				tx.executeSql("UPDATE Suosikkilevyt SET merkinta = '" + merkinta + "' WHERE otsikko = '" + otsikko + "' AND artisti = '" + artisti + "';");
+
+
+			}
+
+			function sqlVirhe(virhe) {
+				$("#tietokantavirhe").popup("open");
+			}
+
+			function sqlOnnistui() {
+
+			}
+		}
+
+		function palautaSuosikki(otsikko, artisti, merkinta) {
+			db.transaction(suoritaSql, sqlVirhe, sqlOnnistui);
+
+			function suoritaSql(tx) {
+
+
+				tx.executeSql("INSERT OR IGNORE INTO Suosikkilevyt VALUES (?,?,?);", [otsikko, artisti, merkinta]);
+
+
+			}
+
+			function sqlVirhe(virhe) {
+				$("#tietokantavirhe").popup("open");
+			}
+
+			function sqlOnnistui() {
+
+			}
+		}
+
+		function lisaaSuosikki(otsikko, artisti) {
+			db.transaction(suoritaSql, sqlVirhe, sqlOnnistui);
+
+			function suoritaSql(tx) {
+
+
+				tx.executeSql("INSERT OR IGNORE INTO Suosikkilevyt VALUES (?,?,?);", [otsikko, artisti, ""]);
+
+
+			}
+
+			function sqlVirhe(virhe) {
+				$("#tietokantavirhe").popup("open");
+			}
+
+			function sqlOnnistui() {
+
+			}
+		}
+
+		function poistaSuosikki(otsikko, artisti) {
+			db.transaction(suoritaSql, sqlVirhe, sqlOnnistui);
+
+			function suoritaSql(tx) {
+
+
+				tx.executeSql("DELETE FROM Suosikkilevyt WHERE otsikko = '" + otsikko + "' AND artisti = '" + artisti + "';");
+
+
+			}
+
+			function sqlVirhe(virhe) {
+				$("#tietokantavirhe").popup("open");
+			}
+
+			function sqlOnnistui() {
+
+			}
+		}
+
+		function tarkistaSuosikki(otsikko, artisti) {
+
+			db.transaction(function(tx) {
+
+				tx.executeSql("SELECT otsikko FROM Suosikkilevyt WHERE otsikko = '" + otsikko + "' AND artisti = '" + artisti + "';", [], function(tx1, result) {
+					if (result.rows.length > 0) {
+						$('#lisaaSuosikki').css('backgroundColor', 'rgb(255, 115, 151)');
+
+					} else {
+						$('#lisaaSuosikki').css('background-color', '#3e3e3e');
+					}
+
+				}, sqlVirhe);
+			}, sqlVirhe, sqlOnnistui);
+
+		}
+
+		function haeMerkinnat(otsikko, artisti) {
+			$('#merkinnat').val('');
+			db.transaction(function(tx) {
+
+				tx.executeSql("SELECT merkinta FROM Suosikkilevyt WHERE otsikko = '" + otsikko + "' AND artisti = '" + artisti + "';", [], function(tx1, result) {
+					var len = result.rows.length;
+					for (var i = 0; i < len; i++) {
+
+						$('#merkinnat').val(result.rows.item(i).merkinta);
+
+
+					}
+
+				}, sqlVirhe);
+			}, sqlVirhe, sqlOnnistui);
+
+		}
+
+
+		var otsikko, artisti, tunnus;
+
+		$(document).on("panelbeforeopen", "#asetukset", function() {
+			db.transaction(function(tx) {
+
+				tx.executeSql("SELECT nimi, paalla FROM Asetukset WHERE nimi = 'varmuuskopiointi';", [], function(tx1, result) {
+
+					if (result.rows.item(0).paalla == 1) {
+						if ($("#varmuuskopiointi").val() == 0) {
+							$("#varmuuskopiointi").val(1).change();
+						}
+					} else {
+						if ($("#varmuuskopiointi").val() == 1) {
+							$("#varmuuskopiointi").val(0).change();
+						}
+					}
+
+
+
+
+				}, sqlVirhe);
+			}, sqlVirhe, sqlOnnistui);
+		});
+
+		$(document).one("panelopen", "#asetukset", function() {
+			$('#varmuuskopiointi').on('change', function() {
+				toggleVarmuuskopiointi();
+			})
+		});
+
+		$(document).on("pageshow", "#hae", function() {
+			$("#syotaNimi").css({
+				"min-height": "80px"
+			});
+
+			$("#syotaTunnus").css({
+				"min-height": "80px"
+			});
+
+			pauseKaikki();
+			$.mobile.loading("hide");
+
+
+			$("#levyHakuTunnuksella").hide();
+			$("#levyHakuNimella").hide();
+			$("form").trigger('reset');
+		});
+
+		$(document).on("pagecreate", "#hae", function() {
+
+
+
+			$("#syotaNimi").on("tap", function() {
+				$(this).animate({
+					"min-height": "30px"
+				});
+				$("#syotaTunnus").animate({
+					"min-height": "80px"
+				});
+				$("#levyHakuTunnuksella").slideUp();
+				$("#levyHakuNimella").slideDown();
+			});
+
+			$("#syotaTunnus").on("tap", function() {
+				$(this).animate({
+					"min-height": "30px"
+				});
+				$("#syotaNimi").animate({
+					"min-height": "80px"
+				});
+				$("#levyHakuNimella").slideUp();
+				$("#levyHakuTunnuksella").slideDown();
+			});
+
+			$("#haeLevy", "#levyHakuNimella").on("tap", function() {
+				if ($("#levyHakuNimella").valid()) {
+
+					$.mobile.loading("show");
+
+					otsikko = $("#otsikko").val();
+					artisti = $("#artisti").val();
+
+
+
+					haeTiedotNimella(otsikko, artisti, function(kappalelista) {
+						if (kappalelista == "Levyä ei löytynyt") {
+							$.mobile.loading("hide");
+							$("#eiLoytynyt").popup("open");
+							setTimeout(function() {
+								$("#eiLoytynyt").popup("close");
+							}, 3000);
+						} else {
+							$(".levytiedot").html(kappalelista);
+							$(".kappalelista").listview().listview("refresh");
+							$.mobile.pageContainer.pagecontainer("change", "#hakutulos");
+						}
+					});
+				}
+			})
+
+			$("#haeLevy", "#levyHakuTunnuksella").on("tap", function() {
+				if ($("#levyHakuTunnuksella").valid()) {
+					$.mobile.loading("show");
+
+					tunnus = $("#tunnus").val();
+
+					haeTiedotTunnuksella(tunnus, function(kappalelista) {
+						if (kappalelista == "Levyä ei löytynyt") {
+							$.mobile.loading("hide");
+							$("#eiLoytynyt").popup("open");
+							setTimeout(function() {
+								$("#eiLoytynyt").popup("close");
+							}, 3000);
+						} else {
+							$(".levytiedot").html(kappalelista);
+							$(".kappalelista").listview().listview("refresh");
+							$.mobile.pageContainer.pagecontainer("change", "#hakutulos");
+						}
+					});
+				}
+			})
+
+			$("#skannaa").on("tap", function() {
+				$.mobile.loading("show");
+
+
+				haeTiedotViivakoodilla(function(kappalelista) {
+					if (kappalelista == "Levyä ei löytynyt") {
+						$.mobile.loading("hide");
+						$("#eiLoytynyt").popup("open");
+						setTimeout(function() {
+							$("#eiLoytynyt").popup("close");
+						}, 3000);
+					} else {
+						$.mobile.pageContainer.pagecontainer("change", "#hakutulos");
+						$(".levytiedot").html(kappalelista);
+						tarkistaSuosikki($("#hakutulos h2").text(), $("#hakutulos h3").text());
+						$(".kappalelista").listview().listview("refresh");
+					}
+				});
+
+
+			})
+
+		})
+
+		$(document).on("pageshow", "#historia", function() {
+			pauseKaikki();
+			hakuHistoria();
+		})
+		
+		$(document).on("pagecreate", "#historia", function() {
+
+			$("#hakuhistoria").on("tap", 'li', function() {
+				$.mobile.loading("show");
+				var otsikko = $(this).attr("name");
+				var artisti = $("a", this).attr("name");
+
+				haeTiedotNimella(otsikko, artisti, function(kappalelista) {
+					if (kappalelista == "Levyä ei löytynyt") {
+						$.mobile.loading("hide");
+						$("#eiLoytynyt").popup("open");
+						setTimeout(function() {
+							$("#eiLoytynyt").popup("close");
+						}, 3000);
+					} else {
+						$(".levytiedot").html(kappalelista);
+						$(".kappalelista").listview().listview("refresh");
+						$.mobile.pageContainer.pagecontainer("change", "#hakutulos");
+					}
+				});
+			})
+		});
+
+		$(document).on("pageshow", "#tallennetut", function() {
+			pauseKaikki();
+			tallennetutLevyt();
+		})
+		
+		$(document).on("pagecreate", "#tallennetut", function() {
+
+
+			$("#tallennetutLevyt").on("tap", 'li', function() {
+				$.mobile.loading("show");
+				var otsikko = $(this).attr("name");
+				var artisti = $("a", this).attr("name");
+
+				haeTiedotNimella(otsikko, artisti, function(kappalelista) {
+					if (kappalelista == "Levyä ei löytynyt") {
+						$.mobile.loading("hide");
+						$("#eiLoytynyt").popup("open");
+						setTimeout(function() {
+							$("#eiLoytynyt").popup("close");
+						}, 3000);
+					} else {
+						$(".levytiedot").html(kappalelista);
+						$(".kappalelista").listview().listview("refresh");
+						$.mobile.pageContainer.pagecontainer("change", "#hakutulos");
+					}
+				});
+			})
+		});
+
+
+		$(document).on("pageshow", "#hakutulos", function() {
+			tarkistaSuosikki($("#hakutulos h2").text(), $("#hakutulos h3").text());
+
+			$(".suosikkinappi").get(0).scrollIntoView({
+				inline: "start"
+			});
+			$("#hakutulos").fadeIn()
+
+			var nykyaika = Date.now();
+			var timestamp = Math.floor(nykyaika / 1000);
+
+			haeMerkinnat($("#hakutulos h2").text(), $("#hakutulos h3").text());
+
+
+			$('#lisaaSuosikki').on("tap", function() {
+				if ($(this).css('backgroundColor') == "rgb(255, 115, 151)") {
+
+					poistaSuosikki($("#hakutulos h2").text(), $("#hakutulos h3").text());
+
+					$(this).css('background-color', '#3e3e3e');
+
+				} else {
+
+
+					lisaaSuosikki($("#hakutulos h2").text(), $("#hakutulos h3").text());
+					$(this).css('background-color', '#ff7397');
+					varmuuskopiointi();
+				}
+			})
+
+
+			db.transaction(suoritaSql, sqlVirhe, sqlOnnistui);
+
+
+			function suoritaSql(tx) {
+
+
+				tx.executeSql("INSERT OR IGNORE INTO HaetutLevyt VALUES (?,?,?);", [timestamp, $("#hakutulos h2").text(), $("#hakutulos h3").text()]);
+				tx.executeSql("UPDATE HaetutLevyt SET aika = " + timestamp + " WHERE otsikko = '" + $("#hakutulos h2").text() + "' AND artisti = '" + $("#hakutulos h3").text() + "';");
+
+
+			}
+
+			function sqlVirhe(virhe) {
+				$("#tietokantavirhe").popup("open");
+			}
+
+			function sqlOnnistui() {
+
+			}
+		});
+
+		$(document).on("pagecreate", "#hakutulos", function() {
+			$("#tallennaMerkinta").on("tap", function() {
+				if ($("#merkinnat").val() != "") {
+					lisaaMerkinta($("#hakutulos h2").text(), $("#hakutulos h3").text(), $("#merkinnat").val());
+					$('#lisaaSuosikki').css('backgroundColor', 'rgb(255, 115, 151)');
+					$("#tallennaMerkinta").text("Tallennettu");
+					window.setTimeout(function() {
+						$("#tallennaMerkinta").text("Tallenna");
+					}, 2000);
+					varmuuskopiointi();
+				}
+			});
+
+			$("#tyhjennaMerkinta").on("tap", function() {
+				if ($("#merkinnat").val() != "") {
+					$("#merkinnat").val("");
+					lisaaMerkinta($("#hakutulos h2").text(), $("#hakutulos h3").text(), "");
+					$("#tyhjennaMerkinta").text("Tyhjennetty");
+					window.setTimeout(function() {
+						$("#tyhjennaMerkinta").text("Tyhjennä");
+					}, 2000);
+				}
+			});
+
+			$(".levytiedot").on("tap", '.kappale', function() {
+
+
+
+
+
+				var kappale = $(this).text();
+				var that = this;
+				if ($("source", that).length) {
+					if ($(that).hasClass("soi")) {
+						$(that).attr('data-icon', "play");
+						$(that).find('.ui-btn').removeClass('ui-icon-stop').addClass('ui-icon-play');
+						$("audio", that).trigger("pause");
+						$("audio", that).currentTime = 0;
+						$(that).removeClass("soi");
+					} else {
+						$(".kappale").removeClass("soi");
+						$(".kappale").attr('data-icon', "play");
+						$(".kappale").find('.ui-btn').removeClass('ui-icon-stop').addClass('ui-icon-play');
+						$("audio").each(function() {
+							this.pause();
+							this.currentTime = 0;
+						});
+						$(that).addClass("soi");
+						$(that).attr('data-icon', "stop");
+						$(that).find('.ui-btn').removeClass('ui-icon-play').addClass('ui-icon-stop');
+						$("audio", that).trigger("play");
+					}
+				} else {
+					haeNayte(kappale, $("#hakutulos h2").text(), $("#hakutulos h3").text(), function(nayteUrl) {
+						if (nayteUrl) {
+							$(".kappale").removeClass("soi");
+							$(".kappale").attr('data-icon', "play");
+							$(".kappale").find('.ui-btn').removeClass('ui-icon-stop').addClass('ui-icon-play');
+							$("audio").each(function() {
+								this.pause();
+								this.currentTime = 0;
+							});
+							$("audio", that).html('<source src="' + nayteUrl + '" type="audio/mp4">');
+							$("audio", that).trigger("play");
+							$(that).attr('data-icon', "stop");
+							$(that).find('.ui-btn').removeClass('ui-icon-play').addClass('ui-icon-stop');
+							$(that).addClass("soi");
+						} else {
+							window.open('https://www.youtube.com/results?search_query=' + kappale + " " + $("#hakutulos h3").text(), '_blank', 'location=yes');
+
+						}
+					});
+				}
+			});
+
+
+		})
+	</script>
+
+</body>
+
+</html>
